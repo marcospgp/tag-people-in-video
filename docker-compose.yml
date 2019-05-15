@@ -1,0 +1,7 @@
+version: "3"
+services:
+  keras:
+    image: gw000/keras:2.1.4-py3-tf-cpu
+    volumes:
+      - ./:/srv
+    tty: true
