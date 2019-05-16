@@ -15,7 +15,6 @@ from yolo_utils import read_classes, read_anchors, generate_colors, preprocess_i
 # The below functions from the yad2k library will be used
 from yad2k.models.keras_yolo import yolo_head, yolo_eval
 
-
 # Provide the name of the image that you saved in the images folder to be fed through the network
 input_image_name = "person.jpg"
 
@@ -25,18 +24,18 @@ width, height = input_image.size
 width = np.array(width, dtype=float)
 height = np.array(height, dtype=float)
 
-# Assign the shape of the input image to image_shapr variable
+# Assign the shape of the input image to image_shape variable
 image_shape = (height, width)
 
 
-# Loading the classes and the anchor boxes that are provided in the madel_data folder
+# Loading the classes and the anchor boxes that are provided in the model_data folder
 class_names = read_classes("model_data/coco_classes.txt")
 anchors = read_anchors("model_data/yolo_anchors.txt")
 
 # Load the pretrained model. Please refer the README file to get info on how to obtain the yolo.h5 file
 yolo_model = load_model("model_data/yolo.h5")
 
-# Print the summery of the model
+# Print the summary of the model
 yolo_model.summary()
 
 # Convert final layer features to bounding box parameters
