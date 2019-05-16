@@ -54,17 +54,19 @@ def process_video(video_path):
 
     video_writer = cv2.VideoWriter(video_out,
                                cv2.VideoWriter_fourcc(*'MPEG'),
-                               50.0,
+                               30.0,
                                (frame_w, frame_h))
+
+    class_names, anchors, yolo_model, yolo_outputs, boxes, scores, classes = load_yolo(frame_w, frame_h)
 
     for i in tqdm(range(nb_frames)):
         _, image = video_reader.read()
 
         # Convert image into pillow image
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        pil_image = Image.fromarray(image)
+        pillow_image = Image.fromarray(image)
 
-        result = predict(frame_w, frame_h, pil_image)
+        result = predict(pillow_image, scores, boxes, classes, yolo_model, class_names)
 
         # Reconvert into opencv format
         result = np.asarray(result)
@@ -82,14 +84,9 @@ def preprocess_image(image):
     image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
     return image, image_data
 
-def predict(width, height, pre_image):
-    class_names, anchors, yolo_model = load_yolo()
-    # Convert final layer features to bounding box parameters
-    yolo_outputs = yolo_head(yolo_model.output, anchors, len(class_names))
-    # More about yolo_eval on keras_yolo.py in yad2k/models
-    boxes, scores, classes = yolo_eval(yolo_outputs, (float(height), float(width)))
+def predict(image, scores, boxes, classes, yolo_model, class_names):
     # Preprocess the input image before feeding into the convolutional network
-    image, image_data = preprocess_image(pre_image)
+    image, image_data = preprocess_image(image)
     # Feed image into network to get prediction
     out_scores, out_boxes, out_classes = feed(scores, boxes, classes, yolo_model, image_data)
     # Apply results to image
@@ -112,10 +109,14 @@ def feed(scores, boxes, classes, yolo_model, image_data):
     out_scores, out_boxes, out_classes = sess.run([scores, boxes, classes],feed_dict={yolo_model.input:image_data,K.learning_phase(): 0})
     return out_scores, out_boxes, out_classes
 
-def load_yolo():
+def load_yolo(width, height):
     class_names = read_classes("YOLOw-Keras/model_data/coco_classes.txt")
     anchors = read_anchors("YOLOw-Keras/model_data/yolo_anchors.txt")
     yolo_model = load_model("yolo.h5")
-    return class_names, anchors, yolo_model
+    # Convert final layer features to bounding box parameters
+    yolo_outputs = yolo_head(yolo_model.output, anchors, len(class_names))
+    # More about yolo_eval on keras_yolo.py in yad2k/models
+    boxes, scores, classes = yolo_eval(yolo_outputs, (float(height), float(width)))
+    return class_names, anchors, yolo_model, yolo_outputs, boxes, scores, classes
 
 main()
