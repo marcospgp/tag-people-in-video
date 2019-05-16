@@ -64,8 +64,6 @@ def print_results(image, out_scores, out_boxes, out_classes, class_names):
     out_path = 'out.jpg'
     print("Saving image to", out_path)
     image.save(out_path, quality=90)
-    output_image = scipy.misc.imread(out_path)
-    imshow(output_image)
 
 def feed(scores, boxes, classes, yolo_model, image_data):
     # Initiate Keras session
