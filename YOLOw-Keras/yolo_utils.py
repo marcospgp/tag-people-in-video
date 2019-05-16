@@ -47,7 +47,7 @@ def preprocess_image(img_path, model_image_size):
     image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
     return image, image_data
 
-def draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors):
+def draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors, display_classes=[]):
     current_dir = os.path.dirname(os.path.abspath(__file__))
     font_path = os.path.join(current_dir, 'font', 'FiraMono-Medium.otf')
     font = ImageFont.truetype(font=font_path,size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
@@ -55,6 +55,9 @@ def draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors):
 
     for i, c in reversed(list(enumerate(out_classes))):
         predicted_class = class_names[c]
+        # Only output classes in display_classes
+        if display_classes and predicted_class not in display_classes:
+            continue
         box = out_boxes[i]
         score = out_scores[i]
 

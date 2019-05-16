@@ -54,10 +54,12 @@ def predict(video_path):
     print_results(image, out_scores, out_boxes, out_classes, class_names)
 
 def print_results(image, out_scores, out_boxes, out_classes, class_names):
+    # Define which results to display
+    display_classes = ['person']
     # Produce the colors for the bounding boxes
     colors = generate_colors(class_names)
     # Draw the bounding boxes
-    draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors)
+    draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors, display_classes)
     # Apply the predicted bounding boxes to the image and save it
     out_path = 'out.jpg'
     print("Saving image to", out_path)
