@@ -31,9 +31,58 @@ argparser.add_argument(
     '--input',
     help='path to the video file')
 
+##################
+# Define functions
+
 def main():
     args = argparser.parse_args()
     video_path = args.input
-    print(video_path)
+    predict(video_path)
+
+def predict(video_path):
+    width, height = get_image_dimensions(video_path)
+    class_names, anchors, yolo_model = load_yolo()
+    # Convert final layer features to bounding box parameters
+    yolo_outputs = yolo_head(yolo_model.output, anchors, len(class_names))
+    # More about yolo_eval on keras_yolo.py in yad2k/models
+    boxes, scores, classes = yolo_eval(yolo_outputs, (height, width))
+    # Preprocess the input image before feeding into the convolutional network
+    image, image_data = preprocess_image(video_path, model_image_size = (608, 608))
+    # Feed image into network to get prediction
+    out_scores, out_boxes, out_classes = feed(scores, boxes, classes, yolo_model, image_data)
+    # Show results
+    print_results(image, out_scores, out_boxes, out_classes, class_names)
+
+def print_results(image, out_scores, out_boxes, out_classes, class_names):
+    # Produce the colors for the bounding boxes
+    colors = generate_colors(class_names)
+    # Draw the bounding boxes
+    draw_boxes(image, out_scores, out_boxes, out_classes, class_names, colors)
+    # Apply the predicted bounding boxes to the image and save it
+    out_path = 'out.jpg'
+    print("Saving image to", out_path)
+    image.save(out_path, quality=90)
+    output_image = scipy.misc.imread(out_path)
+    imshow(output_image)
+
+def feed(scores, boxes, classes, yolo_model, image_data):
+    # Initiate Keras session
+    sess = K.get_session()
+    # Run the session
+    out_scores, out_boxes, out_classes = sess.run([scores, boxes, classes],feed_dict={yolo_model.input:image_data,K.learning_phase(): 0})
+    return out_scores, out_boxes, out_classes
+
+def get_image_dimensions(path):
+    input_image = Image.open(path)
+    width, height = input_image.size
+    width = np.array(width, dtype=float)
+    height = np.array(height, dtype=float)
+    return width, height
+
+def load_yolo():
+    class_names = read_classes("YOLOw-Keras/model_data/coco_classes.txt")
+    anchors = read_anchors("YOLOw-Keras/model_data/yolo_anchors.txt")
+    yolo_model = load_model("yolo.h5")
+    return class_names, anchors, yolo_model
 
 main()
